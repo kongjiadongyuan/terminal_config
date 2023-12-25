@@ -65,6 +65,7 @@ if ! echo "$PATH" | grep -q "$HOME/.local/bin" ; then
     fi
 fi
 
+mkdir -p "$HOME/.config/zellij"
 curl --location "https://raw.githubusercontent.com/kongjiadongyuan/terminal_config/main/zellij/config.kdl" --progress-bar > "$HOME/.config/zellij/config.kdl"
 if [[ $? -ne 0 ]]
 then
