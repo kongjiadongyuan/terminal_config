@@ -65,4 +65,13 @@ if ! echo "$PATH" | grep -q "$HOME/.local/bin" ; then
     fi
 fi
 
+curl --location "https://raw.githubusercontent.com/kongjiadongyuan/terminal_config/main/zellij/config.kdl" --progress-bar > "$HOME/.config/zellij/config.kdl"
+if [[ $? -ne 0 ]]
+then
+    echo
+    echo "Downloading config.kdl failed, cannot launch zellij :("
+    echo "Maybe try again later? :)"
+    exit 1
+fi
+
 exit
