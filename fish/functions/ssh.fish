@@ -13,7 +13,8 @@ function ssh
                 return
             end
         end
-    else
-        command ssh $argv
     end
+    
+    # If we get here, we didn't find a match in the config file
+    command ssh $argv
 end
