@@ -1,0 +1,8 @@
+# if remote uses bash
+# hostname if command -v zellij > /dev/null 2>&1; then zellij attach --create zbl_zellij; else exec $SHELL; fi
+
+# if remote uses fish
+# hostname exodus type -q zellij; and zellij attach --create zbl_zellij; or exec $SHELL
+
+exodus type -q zellij; and zellij attach --create zbl_zellij; or exec $SHELL
+3090 if command -v zellij > /dev/null 2>&1; then zellij attach --create zbl_zellij; else exec $SHELL; fi
