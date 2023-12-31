@@ -1,0 +1,7 @@
+{
+	"any_bash_host": "command -v tmux >/dev/null && { [ -f $HOME/.kjdy.tmux.conf ] && tmux new -As kjdy_main -f $HOME/.kjdy.tmux.conf || tmux new -As kjdy_main; } || exec $SHELL",
+	"any_fish_host": "command -v tmux >/dev/null; and test -f $HOME/.kjdy.tmux.conf; and tmux new -As kjdy_main -f $HOME/.kjdy.tmux.conf; or tmux new -As kjdy_main; or exec $SHELL",
+	"exodus": "command -v tmux >/dev/null; and test -f $HOME/.kjdy.tmux.conf; and tmux new -As kjdy_main -f $HOME/.kjdy.tmux.conf; or tmux new -As kjdy_main; or exec $SHELL",
+	"3090": "command -v tmux >/dev/null && { [ -f $HOME/.kjdy.tmux.conf ] && tmux new -As kjdy_main -f $HOME/.kjdy.tmux.conf || tmux new -As kjdy_main; } || exec $SHELL",
+	"cloud": "command -v tmux >/dev/null; and test -f $HOME/.kjdy.tmux.conf; and tmux new -As kjdy_main -f $HOME/.kjdy.tmux.conf; or tmux new -As kjdy_main; or exec $SHELL"
+}
