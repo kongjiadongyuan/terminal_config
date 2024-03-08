@@ -26,6 +26,6 @@ function ssh {
 
 function sssh {
     $builtin_ssh = (Get-Command ssh -CommandType Application -All)[0].Source
-    Write-Host "Executing: $exp"
+    Write-Host "Executing: $builtin_ssh $args"
     Invoke-Expression "& `"$builtin_ssh`" $args"
 }
