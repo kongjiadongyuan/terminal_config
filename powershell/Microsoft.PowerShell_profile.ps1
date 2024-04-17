@@ -1,4 +1,5 @@
 function ssh {
+    $originalTitle = $host.ui.RawUI.WindowTitle
     $builtin_ssh = (Get-Command ssh -CommandType Application -All)[0].Source
     if ($args.Count -eq 1) {
         $ssh_config_path = "$home\.ssh\ssh_config.json"
@@ -14,6 +15,7 @@ function ssh {
                 $exp = "& `"$builtin_ssh`" -t $target_host `"$command_to_execute`""
                 Write-Host "Executing: $exp"
                 Invoke-Expression $exp
+                $host.ui.RawUI.WindowTitle = $originalTitle
                 return
             }
         }
@@ -22,6 +24,7 @@ function ssh {
     $exp = "& `"$builtin_ssh`" $args"
     Write-Host "Executing: $exp"
     Invoke-Expression $exp
+    $host.ui.RawUI.WindowTitle = $originalTitle
 }
 
 function sssh {
