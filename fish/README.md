@@ -91,20 +91,6 @@ function tssh
                         --with-nth=1
     end
 
-    # ~/.ssh/tmux.yaml controls whether host uses the TUI
-    function _tui_enabled_for_host
-        set -l host $argv[1]
-        set -l yml "$HOME/.ssh/tmux.yaml"
-        if not test -e $yml
-            return 1
-        end
-        if command -sq yq
-            yq -e ".targets[]? | select(. == \"$host\")" $yml >/dev/null 2>&1
-            return $status
-        else
-            return 0
-        end
-    end
 
     # ---------- args ----------
     set -l verbose false
@@ -127,13 +113,7 @@ function tssh
     set -l host  $args_parsed[1]
     set -l rest  $args_parsed[2..-1]
 
-    _tui_enabled_for_host $host
-    set -l enable_tui $status
-    if test $enable_tui -ne 0
-        echo "Connecting normally (no tmux TUI for '$host')…"
-        command ssh $argv
-        return $status
-    end
+    # Always enable TUI for tssh
 
     # ---------- probe remote tmux ----------
     set -l SEP "__TMUXSEP__"
@@ -318,9 +298,4 @@ function tssh
         command ssh $host $rest
 end
 funcsave tssh
-
-mkdir -p $HOME/.ssh
-touch $HOME/.ssh/tmux.yaml
-echo "targets:" >> $HOME/.ssh/tmux.yaml
-echo "  - example" >> $HOME/.ssh/tmux.yaml
 ```
