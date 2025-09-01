@@ -15,26 +15,26 @@ function tssh
             set -l result
             if test -n "$default_name"
                 set result (echo "$default_name" | fzf \
-                    --height=100% \
-                    --margin=10% \
-                    --border=rounded \
-                    --layout=reverse \
-                    --info=hidden \
-                    --prompt="$prompt" \
-                    --header="$header" \
-                    --print-query \
-                    --expect=enter)
+                                            --height=100% \
+                                            --margin=10% \
+                                            --border=rounded \
+                                            --layout=reverse \
+                                            --info=hidden \
+                                            --prompt="$prompt" \
+                                            --header="$header" \
+                                            --print-query \
+                                            --expect=enter)
             else
                 set result (echo "" | fzf \
-                    --height=100% \
-                    --margin=10% \
-                    --border=rounded \
-                    --layout=reverse \
-                    --info=hidden \
-                    --prompt="$prompt" \
-                    --header="$header" \
-                    --print-query \
-                    --expect=enter)
+                                            --height=100% \
+                                            --margin=10% \
+                                            --border=rounded \
+                                            --layout=reverse \
+                                            --info=hidden \
+                                            --prompt="$prompt" \
+                                            --header="$header" \
+                                            --print-query \
+                                            --expect=enter)
             end
 
             if test -z "$result"
@@ -78,17 +78,17 @@ function tssh
             return 1
         end
         printf "%s\n" $items | fzf \
-            --height=100% \
-            --margin=10% \
-            --border=rounded \
-            --layout=reverse \
-            --info=hidden \
-            --ansi \
-            --prompt="$prompt" \
-            --header="$header" \
-            --cycle \
-            --delimiter='\t' \
-            --with-nth=1
+                        --height=100% \
+                        --margin=10% \
+                        --border=rounded \
+                        --layout=reverse \
+                        --info=hidden \
+                        --ansi \
+                        --prompt="$prompt" \
+                        --header="$header" \
+                        --cycle \
+                        --delimiter='\t' \
+                        --with-nth=1
     end
 
     # ~/.ssh/tmux.yaml controls whether host uses the TUI
@@ -107,12 +107,25 @@ function tssh
     end
 
     # ---------- args ----------
-    if test (count $argv) -eq 0
-        echo "Usage: ssh <host> [args...]"
+    set -l verbose false
+    set -l args_parsed
+
+    # Parse arguments
+    for arg in $argv
+        switch $arg
+            case '-v' '--verbose'
+                set verbose true
+            case '*'
+                set -a args_parsed $arg
+        end
+    end
+
+    if test (count $args_parsed) -eq 0
+        echo "Usage: tssh [-v] <host> [args...]"
         return 2
     end
-    set -l host  $argv[1]
-    set -l rest  $argv[2..-1]
+    set -l host  $args_parsed[1]
+    set -l rest  $args_parsed[2..-1]
 
     _tui_enabled_for_host $host
     set -l enable_tui $status
@@ -145,23 +158,46 @@ function tssh
     set -l TAG_SESSION (printf '\e[1;36m[Session]\e[0m')  # bold cyan
     set -l TAG_ACTION  (printf '\e[1;35m[Action]\e[0m')   # bold magenta
 
+    # First pass: find and add tssh_default if it exists
+    set -l tssh_default_found false
     for line in $lines
         if test -z "$line"
             continue
         end
         set -l cols (string split $SEP -- $line)
         set -l name $cols[1]
+        if test "$name" = "tssh_default"
+            set -l wins $cols[2]
+            set -l disp "$TAG_SESSION "(printf '%-20s' $name)"  ($wins windows)"
+            set -l payload "S|$name"
+            set -a items "$disp"(printf '\t')"$payload"
+            set tssh_default_found true
+            break
+        end
+    end
+
+    # Second pass: add all other sessions
+    for line in $lines
+        if test -z "$line"
+            continue
+        end
+        set -l cols (string split $SEP -- $line)
+        set -l name $cols[1]
+        # Skip tssh_default since we already added it
+        if test "$name" = "tssh_default"
+            continue
+        end
         set -l wins $cols[2]
         set -l disp "$TAG_SESSION "(printf '%-20s' $name)"  ($wins windows)"
         set -l payload "S|$name"
-        set -a items "$disp	$payload"
+        set -a items "$disp"(printf '\t')"$payload"
     end
 
     # actions
     set -l disp_create "$TAG_ACTION   Create new tmux session (CC)"
     set -l disp_plain  "$TAG_ACTION   Connect without tmux"
-    set -a items "$disp_create	A|create"
-    set -a items "$disp_plain	A|plain"
+    set -a items "$disp_create"(printf '\t')"A|create"
+    set -a items "$disp_plain"(printf '\t')"A|plain"
 
     # ---------- TUI ----------
     set -l choice (_choose_fullscreen "Select ▸ " "Host: $host  • Use ↑/↓ and Enter" $items)
@@ -171,10 +207,22 @@ function tssh
     end
 
     # parse payload
-    set -l parts (string split "	" -- $choice)  # actual tab character
+    if test "$verbose" = true
+        echo "DEBUG: choice = '$choice'"
+    end
+    set -l parts (string split (printf '\t') -- $choice)  # actual tab character
+    if test "$verbose" = true
+        echo "DEBUG: parts count = "(count $parts)
+        for i in (seq (count $parts))
+            echo "DEBUG: parts[$i] = '$parts[$i]'"
+        end
+    end
     set -l payload
     if test (count $parts) -ge 2
         set payload $parts[2]
+    end
+    if test "$verbose" = true
+        echo "DEBUG: payload = '$payload'"
     end
 
     if test -z "$payload"
@@ -218,58 +266,57 @@ function tssh
                     if test -z "$session" -o "$session" = ""
                         if test "$tssh_default_exists" = "false"
                             # Use default name if tssh_default doesn't exist
-                            set session $default_name
-                            break
-                        else
-                            # Show error menu in TUI if tssh_default exists
-                            set -l error_items
-                            set -l TAG_ERROR (printf '\e[1;31m[Option]\e[0m')  # bold red
-                            set -a error_items "$TAG_ERROR   Try again	RETRY"
-                            set -a error_items "$TAG_ERROR   Exit	EXIT"
+                                                        set session $default_name
+                                                        break
+                                                else
+                                                        # Show error menu in TUI if tssh_default exists
+                                                        set -l error_items
+                                                        set -l TAG_ERROR (printf '\e[1;31m[Option]\e[0m')  # bold red
+                                                        set -a error_items "$TAG_ERROR   Try againRETRY"
+                                                        set -a error_items "$TAG_ERROR   ExitEXIT"
 
-                            set -l error_choice (_choose_fullscreen "Session name cannot be empty ▸ " "Host: $host  • What would you like to do?" $error_items)
-                            if test -z "$error_choice"
-                                echo "Canceled."
-                                return 130
-                            end
+                                                        set -l error_choice (_choose_fullscreen "Session name cannot be empty ▸ " "Host: $host  • What would you like to do?" $error_items)
+                                                        if test -z "$error_choice"
+                                                                echo "Canceled."
+                                                                return 130
+                                                        end
 
-                            set -l error_payload (string split "	" -- $error_choice)[2]
-                            switch "$error_payload"
-                                case "RETRY"
-                                    continue
-                                case "EXIT"
-                                    echo "Canceled."
-                                    return 130
-                                case "*"
-                                    echo "Canceled."
-                                    return 130
-                            end
+                                                        set -l error_payload (string split "" -- $error_choice)[2]
+                                                        switch "$error_payload"
+                                                                case "RETRY"
+                                                                        continue
+                                                                case "EXIT"
+                                                                        echo "Canceled."
+                                                                        return 130
+                                                                case "*"
+                                                                        echo "Canceled."
+                                                                        return 130
+                                                        end
+                                                end
+                                        else
+                                                break
+                                        end
+                                end
+
+                                set -l remote_cmd "tmux -CC new-session -s \"$session\""
+                                echo "Creating and connecting (tmux -CC) to '$session'…"
+                                command ssh -t $host $remote_cmd
+                                return $status
                         end
-                    else
-                        break
-                    end
-                end
 
-                set -l remote_cmd "tmux -CC new-session -s \"$session\""
-                echo "Creating and connecting (tmux -CC) to '$session'…"
-                command ssh -t $host $remote_cmd
-                return $status
-            end
+                case 'S'
+                        set -l name (string split '|' -- $payload)[2]
+                        echo "Attaching with tmux -CC to '$name'…"
+                        # Or attach-or-create:
+                        # command ssh -t $host "tmux -CC new-session -As \"$name\""
+                        command ssh -t $host "tmux -CC attach -t \"$name\""
+                        return $status
+        end
 
-        case 'S'
-            set -l name (string split '|' -- $payload)[2]
-            echo "Attaching with tmux -CC to '$name'…"
-            # Or attach-or-create:
-            # command ssh -t $host "tmux -CC new-session -As \"$name\""
-            command ssh -t $host "tmux -CC attach -t \"$name\""
-            return $status
-    end
-
-    # Fallback
-    echo "Unknown selection. Connecting normally…"
-    command ssh $host $rest
+        # Fallback
+        echo "Unknown selection. Connecting normally…"
+        command ssh $host $rest
 end
-
 funcsave tssh
 
 mkdir -p $HOME/.ssh
